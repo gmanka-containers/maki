@@ -1,0 +1,35 @@
+on:
+  push: {}
+  pull_request: {}
+  workflow_dispatch:
+    inputs:
+      cache:
+        type: boolean
+        default: true
+  schedule:
+    - cron: '0 7 * * *'
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: redhat-actions/podman-login@v2
+        with:
+          registry: quay.io
+          username: gmankab
+          password: ${{ secrets.QUAY_TOKEN }}
+      - uses: redhat-actions/buildah-build@v3
+        with:
+          tags: quay.io/gmanka/maki:latest
+          containerfiles: |
+            Containerfile
+          layers: true
+          squash: false
+      - name: quay.io
+        uses: redhat-actions/push-to-registry@v3
+        with:
+          tags: quay.io/gmanka/maki:latest
+          registry: quay.io/gmanka
